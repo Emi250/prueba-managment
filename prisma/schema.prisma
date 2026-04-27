@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Property {
+  id        String    @id @default(uuid())
+  userId    String    @default("default-user")
+  name      String
+  address   String?
+  zone      String?
+  capacity  Int?
+  status    String    @default("active") // active, inactive
+  currency  String    @default("ARS")
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  reservations Reservation[]
+  expenses     Expense[]
+
+  @@map("properties")
+}
+
+model Reservation {
+  id                 String    @id @default(uuid())
+  userId             String    @default("default-user")
+  propertyId         String
+  property           Property  @relation(fields: [propertyId], references: [id])
+  guestName          String
+  checkIn            DateTime
+  checkOut           DateTime
+  nights             Int
+  amountToPay        Float
+  currency           String    @default("ARS")
+  paymentStatus      String    @default("pending") // pending, partial, paid
+  reservationStatus  String    @default("confirmed") // confirmed, pending, cancelled, finished
+  bookingChannel     String    @default("Airbnb") // Airbnb, Booking, directo, otro
+  guestsCount        Int?
+  phone              String?
+  platformCommission Float?
+  cleaningFee        Float?
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  @@map("reservations")
+}
+
+model Expense {
+  id            String    @id @default(uuid())
+  userId        String    @default("default-user")
+  propertyId    String
+  property      Property  @relation(fields: [propertyId], references: [id])
+  date          DateTime
+  category      String
+  description   String
+  amount        Float
+  currency      String    @default("ARS")
+  paymentMethod String?
+  expenseType   String    @default("fijo") // fijo, variable, extraordinario
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@map("expenses")
+}
+
+model Settings {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique @default("default-user")
+  mainCurrency           String   @default("ARS")
+  incomeAllocationMethod String   @default("check-in") // check-in, prorrateado
+  fiscalYearStartMonth   Int      @default(1)
+  aiApiKeyEncrypted      String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("settings")
+}
